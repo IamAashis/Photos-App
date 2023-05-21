@@ -26,10 +26,9 @@ class ImageAdapter(var images: List<String>) :
         val imageUri = images[position]
         Glide.with(holder.itemView)
             .load(imageUri)
-            .apply(RequestOptions.centerCropTransform())
             .into(holder.imageView)
 
-        holder.indexTextView.text = (position + 1).toString()
+        holder.indexTextView.text = (position).toString()
     }
 
     override fun getItemCount(): Int {

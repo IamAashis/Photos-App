@@ -7,10 +7,24 @@
     android:padding="16dp"
     tools:context=".MainActivity">
 
-    <Button
-        android:id="@+id/btnSelectImages"
+    <EditText
+        android:id="@+id/edtSizeofList"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@drawable/corner_radius"
+        android:hint="Enter the size of list"
+        android:inputType="number"
+        android:paddingStart="15dp"
+        android:paddingTop="11dp"
+        android:paddingBottom="11dp"
+        android:textColorHint="@color/purple_700"
+        android:textSize="15sp" />
+
+    <Button
+        android:id="@+id/btnSelectImages"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:text="Select Images" />
 
     <androidx.recyclerview.widget.RecyclerView
