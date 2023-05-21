@@ -1,13 +1,16 @@
-package com.android.photosapp;
+package com.android.photosapp
 
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.provider.MediaStore
 import android.widget.Toast
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.android.photosapp.adapter.ImageAdapter
 import com.android.photosapp.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -15,24 +18,62 @@ class MainActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var imageAdapter: ImageAdapter
     private val selectedImages: ArrayList<String> = ArrayList()
-    private val REQUEST_CODE_SELECT_IMAGES = 1
+    private val startImageResult =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                getImage(result)
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        setup()
+    }
+
+    private fun setup() {
+        initRecyclerView()
+        initListener()
+    }
+
+    private fun initRecyclerView() {
         recyclerView = binding.recyclerView
-        recyclerView.layoutManager = GridLayoutManager(this, 3)
+        recyclerView.layoutManager = GridLayoutManager(this, 2)
         imageAdapter = ImageAdapter(selectedImages)
         recyclerView.adapter = imageAdapter
+    }
 
+    private fun initListener() {
         binding.btnSelectImages.setOnClickListener {
             if (binding.edtSizeofList.text.toString().trim().isNotEmpty()) {
                 selectImages()
             } else {
-                Toast.makeText(this, "Please insert total size of list", Toast.LENGTH_SHORT).show()
+                showToast(getString(R.string.total_size))
             }
+        }
+    }
+
+    private fun getImage(result: ActivityResult) {
+        if (result.data?.clipData != null) {
+            selectedImages.clear()
+            val count = result.data?.clipData?.itemCount ?: 0
+            for (i in 0 until count) {
+                val imageUri = result.data?.clipData?.getItemAt(i)?.uri.toString()
+                selectedImages.add(imageUri)
+            }
+        } else if (result.data?.data != null) {
+            selectedImages.clear()
+            val imageUri = result.data?.data.toString()
+            selectedImages.add(imageUri)
+        }
+
+        if (selectedImages.size == 2) {
+            generateList()
+        } else {
+            showToast(getString(R.string.select_image))
+            selectedImages.clear()
         }
     }
 
@@ -40,46 +81,14 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
         intent.type = "image/*"
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
-        startActivityForResult(
-            Intent.createChooser(intent, "Select Pictures"),
-            REQUEST_CODE_SELECT_IMAGES
-        )
+        startImageResult.launch(Intent.createChooser(intent, getString(R.string.select_pictures)))
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        if (requestCode == REQUEST_CODE_SELECT_IMAGES && resultCode == Activity.RESULT_OK) {
-            if (data?.clipData != null) {
-                selectedImages.clear()
-                val count = data.clipData!!.itemCount
-                for (i in 0 until count) {
-                    val imageUri = data.clipData!!.getItemAt(i).uri.toString()
-                    selectedImages.add(imageUri)
-                }
-            } else if (data?.data != null) {
-                selectedImages.clear()
-                val imageUri = data.data.toString()
-                selectedImages.add(imageUri)
-            }
-
-            if (selectedImages.size == 2) {
-                generateList()
-            } else if (selectedImages.size < 2) {
-                Toast.makeText(this, "Please select at least 2 images", Toast.LENGTH_SHORT).show()
-                selectedImages.clear()
-            }else{
-                Toast.makeText(this, "Please select at least 2 images only", Toast.LENGTH_SHORT).show()
-                selectedImages.clear()
-            }
-        }
-    }
-
-    fun generateList() {
+    private fun generateList() {
         val image1 = selectedImages[0]
         val image2 = selectedImages[1]
 
-        val totalItems = binding.edtSizeofList.text.toString().trim().toInt() ?: 0
+        val totalItems = binding.edtSizeofList.text.toString().trim().toInt()
         val triangularIndices = generateTriangularNumbers(totalItems)
 
         val images = mutableListOf<String>()
@@ -110,4 +119,7 @@ class MainActivity : AppCompatActivity() {
         return triangularNumbers
     }
 
+    private fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
 }
