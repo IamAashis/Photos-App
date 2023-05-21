@@ -24,7 +24,6 @@ class ImageAdapter(var images: List<String>) :
         )
     ) {}
 
-
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val binding = (holder as ImageVH).binding
         val imageUri = images[position]
@@ -33,8 +32,6 @@ class ImageAdapter(var images: List<String>) :
         binding.indexTextView.text = (position).toString()
     }
 
-    override fun getItemCount(): Int {
-        return images.size
-    }
+    override fun getItemCount(): Int = images.size
 }
 
